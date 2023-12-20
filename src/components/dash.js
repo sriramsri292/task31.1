@@ -1,50 +1,42 @@
 import React from "react";
+import { Formik, Field, Form, ErrorMessage } from "formik";
+import * as Yup from "yup";
 import Button from 'react-bootstrap/Button';
-import Form from 'react-bootstrap/Form';
-import { useState } from "react";
 import Table from 'react-bootstrap/Table';
+import { useState } from "react";
+
+const validationSchema = Yup.object().shape({
+    title: Yup.string().required("Title is required"),
+    name: Yup.string().required("Author name is required"),
+    num: Yup.number().required("ISBN Number is required"),
+    date: Yup.date().required("Publication Date is required"),
+});
 
 export default function Dash() {
     const [book, setBook] = useState([]);
+    const [editIndex, setEditIndex] = useState(-1);
 
-    const [title, setTitle] = useState('');
-    const [name, setName] = useState('');
-    const [num, setNum] = useState('');
-    const [date, setDate] = useState('');
+    const initialValues = {
+        title: '',
+        name: '',
+        num: '',
+        date: '',
+    };
 
-    const [editIndex, setEditIndex] = useState(-1); // Initialize with -1
-
-    const handleTitle = (e) => setTitle(e.target.value);
-    const handleName = (e) => setName(e.target.value);
-    const handleNum = (e) => setNum(e.target.value);
-    const handleDate = (e) => setDate(e.target.value);
-
-    const handleSubmit = (e) => {
-        e.preventDefault();
+    const handleSubmit = (values, { resetForm }) => {
         if (editIndex !== -1) {
-            // If editIndex is not -1, it means we are editing an existing entry
             const updatedBook = [...book];
-            updatedBook[editIndex] = { title, name, num, date };
+            updatedBook[editIndex] = values;
             setBook(updatedBook);
-            setEditIndex(-1); // Reset editIndex after editing
+            setEditIndex(-1);
         } else {
-            // Otherwise, it's a new entry
-            const value = { title, name, num, date };
-            setBook([...book, value]);
+            setBook([...book, values]);
         }
-        setTitle('');
-        setName('');
-        setNum('');
-        setDate('');
-    }
+        resetForm();
+    };
 
     const handleEditClick = (index) => {
         setEditIndex(index);
-        const data = book[index];
-        setTitle(data.title);
-        setName(data.name);
-        setNum(data.num);
-        setDate(data.date);
     };
 
     const handleDelete = (indexToDelete) => {
@@ -52,66 +44,82 @@ export default function Dash() {
         updatedBook.splice(indexToDelete, 1);
         setBook(updatedBook);
     };
-let i=0;
+
+    let i = 0;
+
     return (
         <div className="a">
             <div>
                 <h1>FORM</h1>
             </div>
-            <Form className="b" onSubmit={handleSubmit}>
-                <Form.Group className="mb-3" controlId="formBasicEmail">
-                    <Form.Label><h4> Title</h4></Form.Label>
-                    <Form.Control className="b" type="Text" value={title} onChange={handleTitle} placeholder="Title Name" />
-                </Form.Group>
+            <Formik
+                initialValues={editIndex !== -1 ? book[editIndex] : initialValues}
+                validationSchema={validationSchema}
+                onSubmit={handleSubmit}
+            >
+                <Form className="b">
+                    <div className="mb-3">
+                        <label htmlFor="title"><h4>Title</h4></label>
+                        <Field type="text" id="title" name="title" placeholder="Title Name" />
+                        <ErrorMessage name="title" component="div" className="error" />
+                    </div>
 
-                <Form.Group className="mb-3" controlId="formBasicPassword">
-                    <Form.Label><h4>Author </h4></Form.Label>
-                    <Form.Control className="b" type="Text" value={name} onChange={handleName} placeholder="Author Name" />
-                </Form.Group>
+                    <div className="mb-3">
+                        <label htmlFor="name"><h4>Author</h4></label>
+                        <Field type="text" id="name" name="name" placeholder="Author Name" />
+                        <ErrorMessage name="name" component="div" className="error" />
+                    </div>
 
-                <Form.Label><h4> ISBN Number </h4></Form.Label>
-                <Form.Control className="b" type="number" value={num} onChange={handleNum} placeholder="Enter ISBN" />
+                    <div className="mb-3">
+                        <label htmlFor="num"><h4>ISBN Number</h4></label>
+                        <Field type="number" id="num" name="num" placeholder="Enter ISBN" />
+                        <ErrorMessage name="num" component="div" className="error" />
+                    </div>
 
-                <Form.Label><h4> Publication Date </h4></Form.Label>
-                <Form.Control className="b" type="Date" value={date} onChange={handleDate} placeholder="Enter publication date" />
+                    <div className="mb-3">
+                        <label htmlFor="date"><h4>Publication Date</h4></label>
+                        <Field type="date" id="date" name="date" placeholder="Enter publication date" />
+                        <ErrorMessage name="date" component="div" className="error" />
+                    </div>
 
-                <Form.Group className="mb-3" controlId="formBasicCheckbox">
-                    <Form.Check type="checkbox" label="Check me out" />
-                </Form.Group>
-                <Button variant="primary" type="submit">
-                    Submit
-                </Button>
-            </Form>
+                    <div className="mb-3" controlId="formBasicCheckbox">
+                        <Field type="checkbox" name="checkbox" />
+                        <label htmlFor="checkbox">Check me out</label>
+                    </div>
 
-            <div className="c"> 
-            <Table className="d" responsive="sm">
-        <thead>
-          <tr>
-            <th>#</th>
-            <th>Title</th>
-            <th>Author Name</th>
-            <th>ISBN Number</th>
-            <th>Date</th>
-            <th>Update</th>
-            <th>Delete</th>
-           
-          </tr>
-        </thead>
-        <tbody>
-        {book.map((data, index) =>(   
-          <tr key={index}>
-            <td>{i++}</td>
-            <td>{data.title}</td>
-            <td>{data.name}</td>
-            <td>{data.num}</td>
-            <td>{data.date}</td>
-            <td > <button onClick={() => handleEditClick(index)}> click here  </button>    </td>
-            <td> <button onClick={()=> handleDelete(index)}> delete </button>    </td>
-           
-          </tr>
-           ))}
-          </tbody>
-      </Table> 
+                    <Button variant="primary" type="submit">
+                        Submit
+                    </Button>
+                </Form>
+            </Formik>
+
+            <div className="c">
+                <Table className="d" responsive="sm">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Title</th>
+                            <th>Author Name</th>
+                            <th>ISBN Number</th>
+                            <th>Date</th>
+                            <th>Update</th>
+                            <th>Delete</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {book.map((data, index) => (
+                            <tr key={index}>
+                                <td>{i++}</td>
+                                <td>{data.title}</td>
+                                <td>{data.name}</td>
+                                <td>{data.num}</td>
+                                <td>{data.date}</td>
+                                <td><button onClick={() => handleEditClick(index)}>Click here</button></td>
+                                <td><button onClick={() => handleDelete(index)}>Delete</button></td>
+                            </tr>
+                        ))}
+                    </tbody>
+                </Table>
             </div>
         </div>
     );
